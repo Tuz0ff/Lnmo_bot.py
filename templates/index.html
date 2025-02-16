@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Авторизация</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        // Инициализация Telegram Web App
+        Telegram.WebApp.ready();
+
+        // Авторизация через Telegram
+        function authWithTelegram() {
+            const initData = Telegram.WebApp.initData;
+            fetch('/register_telegram', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `initData=${initData}`,
+            })
+            .then(response => response.text())
+            .then(data => {
+                Telegram.WebApp.showAlert(data); // Показываем результат в Telegram
+                if (data === "Регистрация успешна!") {
+                    window.location.href = '/'; // Перенаправляем на главную страницу
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <h1>Авторизация</h1>
+    <button onclick="authWithTelegram()">Авторизоваться через Telegram</button>
+    <p>Нет аккаунта? <a href="/register_page">Зарегистрируйтесь здесь</a></p>
+</body>
+</html>
