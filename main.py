@@ -9,10 +9,10 @@ from urllib.parse import parse_qs
 app = Flask(__name__, template_folder='templates')
 
 # Получение строки подключения из переменных окружения
-DATABASE_URL = os.getenv('DATABASE_URL')
+DATABASE_URL = os.getenv('postgresql://lnmobot_database_nkjw_user:hB6Bs5tb7c6H5DjNTBnBEnyilQhCZrYj@dpg-cup55daj1k6c739g1c1g-a/lnmobot_database_nkjw')
 
 # Секретный ключ вашего бота (получите его у BotFather)
-TELEGRAM_BOT_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN'
+TELEGRAM_BOT_TOKEN = '7789697745:AAHgg_-f4tjpswEKgnbQujUSkKuWp8TIsnw'
 
 # Создание таблицы пользователей
 def init_db():
