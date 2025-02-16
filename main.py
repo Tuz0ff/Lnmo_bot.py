@@ -110,7 +110,7 @@ def register_telegram():
                        (user_data['id'], user_data.get('username', 'user'), 0))
         conn.commit()
         conn.close()
-        return "Регистрация успешна!"
+        return render_template('registration_success.html')  # Перенаправляем на страницу успешной регистрации
     except sqlite3.IntegrityError:
         conn.close()
         return "Пользователь с таким Telegram ID уже существует."
