@@ -1,15 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for
 import sqlite3
 import hashlib
-import hmac
-import json
-from urllib.parse import parse_qs
 
 app = Flask(__name__, template_folder='templates')
-
-# Секретный ключ вашего бота (получите его у BotFather)
-TELEGRAM_BOT_TOKEN = '7789697745:AAHgg_-f4tjpswEKgnbQujUSkKuWp8TIsnw'
-
 
 # Создание базы данных и таблицы пользователей
 def init_db():
@@ -18,102 +11,82 @@ def init_db():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            telegram_id INTEGER UNIQUE,
             login TEXT UNIQUE,
             password TEXT,
-            year_of_born INTEGER,
             quantity_of_coins INTEGER DEFAULT 0
         )
     ''')
     conn.commit()
     conn.close()
 
-# Проверка подлинности initData от Telegram
-def verify_init_data(init_data):
-    try:
-        # Разбираем initData
-        data = parse_qs(init_data)
-
-        # Проверяем наличие hash в данных
-        if 'hash' not in data:
-            return False
-
-        hash_str = data['hash'][0]
-
-        # Сортируем данные и создаем строку для проверки
-        data_check_string = '\n'.join(f"{k}={v[0]}" for k, v in sorted(data.items()) if k != 'hash')
-
-        # Создаем секретный ключ
-        secret_key = hmac.new(b"WebAppData", TELEGRAM_BOT_TOKEN.encode(), hashlib.sha256).digest()
-        computed_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
-
-        # Сравниваем хэши
-        return computed_hash == hash_str
-    except Exception as e:
-        print(f"Ошибка проверки initData: {e}")
-        return False
-
-@app.route('/login_telegram', methods=['POST'])
-def login_telegram():
-    init_data = request.form['initData']
-    print("Received initData:", init_data)  # Отладочный вывод
-    if not verify_init_data(init_data):
-        return "Ошибка авторизации."
-
 # Главная страница с формой авторизации
 @app.route('/')
 def index():
-    # Получаем initData из запроса
-    init_data = request.args.get('initData')
-    if init_data and verify_init_data(init_data):
-        # Разбираем initData
-        data = parse_qs(init_data)
-        user_data = json.loads(data['user'][0])
+    return render_template('index.html')
 
-        # Проверяем, есть ли пользователь в базе данных
-        conn = sqlite3.connect('users.db')
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM users WHERE telegram_id = ?', (user_data['id'],))
-        user = cursor.fetchone()
-        conn.close()
+# Обработка входа по логину и паролю
+@app.route('/login', methods=['POST'])
+def login():
+    login = request.form['login']
+    password = request.form['password']
 
-        if user:
-            # Если пользователь найден, перенаправляем на страницу приветствия
-            return render_template('welcome.html', login=user[2], coins=user[5])
-        else:
-            # Если пользователь не найден, предлагаем зарегистрироваться
-            return redirect(url_for('register_page'))
+    # Хэшируем пароль для сравнения с базой данных
+    hashed_password = hashlib.sha256(password.encode()).hexdigest()
+
+    # Проверяем, есть ли пользователь в базе данных
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE login = ? AND password = ?', (login, hashed_password))
+    user = cursor.fetchone()
+    conn.close()
+
+    if user:
+        # Если пользователь найден, перенаправляем на страницу с количеством монет
+        return redirect(url_for('user_profile', user_id=user[0]))
     else:
-        return render_template('index.html')
+        # Если пользователь не найден, возвращаем ошибку
+        return "Неверный логин или пароль"
+
+# Страница профиля пользователя с количеством монет
+@app.route('/profile/<int:user_id>')
+def user_profile(user_id):
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE id = ?', (user_id,))
+    user = cursor.fetchone()
+    conn.close()
+
+    if user:
+        return render_template('profile.html', login=user[1], coins=user[3])
+    else:
+        return "Пользователь не найден"
 
 # Страница регистрации
 @app.route('/register_page')
 def register_page():
     return render_template('register.html')
 
-# Регистрация нового пользователя через Telegram
-@app.route('/register_telegram', methods=['POST'])
-def register_telegram():
-    init_data = request.form['initData']
-    if not verify_init_data(init_data):
-        return "Ошибка авторизации."
+# Обработка регистрации
+@app.route('/register', methods=['POST'])
+def register():
+    login = request.form['login']
+    password = request.form['password']
 
-    # Разбираем initData
-    data = parse_qs(init_data)
-    user_data = json.loads(data['user'][0])
+    # Хэшируем пароль
+    hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
     # Добавляем пользователя в базу данных
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
     try:
-        cursor.execute('INSERT INTO users (telegram_id, login, quantity_of_coins) VALUES (?, ?, ?)',
-                       (user_data['id'], user_data.get('username', 'user'), 0))
+        cursor.execute('INSERT INTO users (login, password) VALUES (?, ?)',
+                       (login, hashed_password))
         conn.commit()
         conn.close()
-        return render_template('registration_success.html')  # Перенаправляем на страницу успешной регистрации
+        return render_template('registration_success.html')
     except sqlite3.IntegrityError:
         conn.close()
-        return "Пользователь с таким Telegram ID уже существует."
+        return "Пользователь с таким логином уже существует."
 
 if __name__ == '__main__':
     init_db()
