@@ -6,13 +6,13 @@
     <title>Авторизация</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        // Инициализация Telegram Web App
         Telegram.WebApp.ready();
 
-        // Авторизация через Telegram
         function authWithTelegram() {
             const initData = Telegram.WebApp.initData;
-            fetch('/register_telegram', {
+            console.log("initData:", initData);  // Отладочный вывод
+
+            fetch('/login_telegram', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -21,9 +21,31 @@
             })
             .then(response => response.text())
             .then(data => {
-                Telegram.WebApp.showAlert(data); // Показываем результат в Telegram
-                if (data === "Регистрация успешна!") {
-                    window.location.href = '/'; // Перенаправляем на главную страницу
+                if (data.includes("Добро пожаловать")) {
+                    window.location.href = '/welcome';
+                } else {
+                    Telegram.WebApp.showAlert(data);
+                }
+            });
+        }
+
+        function loginWithCredentials() {
+            const login = document.getElementById('login').value;
+            const password = document.getElementById('password').value;
+
+            fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `login=${login}&password=${password}`,
+            })
+            .then(response => response.text())
+            .then(data => {
+                if (data.includes("Добро пожаловать")) {
+                    window.location.href = '/welcome';
+                } else {
+                    alert(data);
                 }
             });
         }
@@ -31,7 +53,14 @@
 </head>
 <body>
     <h1>Авторизация</h1>
-    <button onclick="authWithTelegram()">Авторизоваться через Telegram</button>
+    <form onsubmit="event.preventDefault(); loginWithCredentials();">
+        <label for="login">Логин:</label>
+        <input type="text" id="login" name="login" required><br><br>
+        <label for="password">Пароль:</label>
+        <input type="password" id="password" name="password" required><br><br>
+        <button type="submit">Войти</button>
+    </form>
     <p>Нет аккаунта? <a href="/register_page">Зарегистрируйтесь здесь</a></p>
+    <button onclick="authWithTelegram()">Авторизоваться через Telegram</button>
 </body>
 </html>
