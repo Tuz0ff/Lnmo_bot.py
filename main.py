@@ -79,8 +79,8 @@ def register():
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
     try:
-        cursor.execute('INSERT INTO users (login, password) VALUES (?, ?)',
-                       (login, hashed_password))
+        cursor.execute('INSERT INTO users (login, password, quantity_of_coins) VALUES (?, ?, ?)',
+                       (login, hashed_password, 1))
         conn.commit()
         conn.close()
         return render_template('registration_success.html')
