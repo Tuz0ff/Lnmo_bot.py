@@ -4,29 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Авторизация</title>
-</head>
-<body>
-    <h1>Авторизация</h1>
-    <form onsubmit="event.preventDefault(); loginWithCredentials();">
-        <label for="login">Логин:</label>
-        <input type="text" id="login" name="login" required><br><br>
-        <label for="password">Пароль:</label>
-        <input type="password" id="password" name="password" required><br><br>
-        <button type="submit">Войти</button>
-    </form>
-    <p>Нет аккаунта? <a href="/register_page">Зарегистрируйтесь здесь</a></p>
-
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        function loginWithCredentials() {
-            const login = document.getElementById('login').value;
-            const password = document.getElementById('password').value;
+        Telegram.WebApp.ready();
 
-            fetch('/login', {
+        function authWithTelegram() {
+            const initData = Telegram.WebApp.initData;
+
+            fetch('/login_telegram', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: `login=${login}&password=${password}`,
+                body: `initData=${initData}`,
             })
             .then(response => {
                 if (response.redirected) {
@@ -37,10 +27,14 @@
             })
             .then(data => {
                 if (data) {
-                    alert(data);  // Показываем ошибку, если есть
+                    Telegram.WebApp.showAlert(data);  // Показываем ошибку, если есть
                 }
             });
         }
     </script>
+</head>
+<body>
+    <h1>Авторизация</h1>
+    <button onclick="authWithTelegram()">Авторизоваться через Telegram</button>
 </body>
 </html>
