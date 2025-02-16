@@ -1,16 +1,20 @@
+import os
+import psycopg2
 from flask import Flask, render_template, request, redirect, url_for
-import sqlite3
 import hashlib
 
 app = Flask(__name__, template_folder='templates')
 
-# Создание базы данных и таблицы пользователей
+# Получение строки подключения из переменных окружения
+DATABASE_URL = os.getenv('postgresql://lnmobot_database_nkjw_user:hB6Bs5tb7c6H5DjNTBnBEnyilQhCZrYj@dpg-cup55daj1k6c739g1c1g-a/lnmobot_database_nkjw')
+
+# Создание таблицы пользователей
 def init_db():
-    conn = sqlite3.connect('users.db')
+    conn = psycopg2.connect(DATABASE_URL, sslmode='require')
     cursor = conn.cursor()
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             login TEXT UNIQUE,
             password TEXT,
             quantity_of_coins INTEGER DEFAULT 0
@@ -34,9 +38,9 @@ def login():
     hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
     # Проверяем, есть ли пользователь в базе данных
-    conn = sqlite3.connect('users.db')
+    conn = psycopg2.connect(DATABASE_URL, sslmode='require')
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM users WHERE login = ? AND password = ?', (login, hashed_password))
+    cursor.execute('SELECT * FROM users WHERE login = %s AND password = %s', (login, hashed_password))
     user = cursor.fetchone()
     conn.close()
 
@@ -50,9 +54,9 @@ def login():
 # Страница профиля пользователя с количеством монет
 @app.route('/profile/<int:user_id>')
 def user_profile(user_id):
-    conn = sqlite3.connect('users.db')
+    conn = psycopg2.connect(DATABASE_URL, sslmode='require')
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM users WHERE id = ?', (user_id,))
+    cursor.execute('SELECT * FROM users WHERE id = %s', (user_id,))
     user = cursor.fetchone()
     conn.close()
 
@@ -76,15 +80,15 @@ def register():
     hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
     # Добавляем пользователя в базу данных
-    conn = sqlite3.connect('users.db')
+    conn = psycopg2.connect(DATABASE_URL, sslmode='require')
     cursor = conn.cursor()
     try:
-        cursor.execute('INSERT INTO users (login, password, quantity_of_coins) VALUES (?, ?, ?)',
+        cursor.execute('INSERT INTO users (login, password, quantity_of_coins) VALUES (%s, %s, %s)',
                        (login, hashed_password, 1))
         conn.commit()
         conn.close()
         return render_template('registration_success.html')
-    except sqlite3.IntegrityError:
+    except psycopg2.IntegrityError:
         conn.close()
         return "Пользователь с таким логином уже существует."
 
