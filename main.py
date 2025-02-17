@@ -57,7 +57,9 @@ def user_profile(user_id):
     conn.close()
 
     if user:
-        return render_template('profile.html', login=user[1], coins=user[3])
+        # Убедимся, что coins не None
+        coins = user[4] if user[4] is not None else 0
+        return render_template('profile.html', login=user[1], coins=coins)
     else:
         return "Пользователь не найден"
 
@@ -80,7 +82,7 @@ def register():
     cursor = conn.cursor()
     try:
         cursor.execute('INSERT INTO users (login, password, quantity_of_coins) VALUES (?, ?, ?)',
-                       (login, hashed_password, 1))
+                       (login, hashed_password, 0))
         conn.commit()
         conn.close()
         return render_template('registration_success.html')
