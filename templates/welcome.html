@@ -4,10 +4,67 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Добро пожаловать</title>
+    <style>
+        /* Общие стили */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: "LNMO BOT";
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: rgba(0, 123, 255, 0.1); /* Синий цвет с прозрачностью */
+            z-index: -1;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+            z-index: 1;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        p {
+            margin: 10px 0;
+        }
+    </style>
 </head>
 <body>
-    <h1>Добро пожаловать, {{ login }}!</h1>
-    <p>Количество ваших монет: {{ coins }}</p>
-    <a href="/">Выйти</a>
+    <div class="container">
+        <h1>Добро пожаловать, {{ login }}!</h1>
+        <p>Количество ваших монет: {{ coins }}</p>
+        <a href="/">Выйти</a>
+    </div>
 </body>
 </html>
