@@ -1,95 +1,70 @@
-from flask import Flask, render_template, request, redirect, url_for
-import sqlite3
-import hashlib
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добро пожаловать</title>
+    <style>
+        /* Общие стили */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            position: relative;
+        }
 
-app = Flask(__name__, template_folder='templates')
+        body::before {
+            content: "LNMO Bot";
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: rgba(0, 57, 110, 1);
+            z-index: -1;
+        }
 
-# Создание базы данных и таблицы пользователей
-def init_db():
-    conn = sqlite3.connect('users.db')
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            login TEXT UNIQUE,
-            password TEXT,
-            quantity_of_coins INTEGER DEFAULT 0
-        )
-    ''')
-    conn.commit()
-    conn.close()
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+            z-index: 1;
+        }
 
-# Главная страница с формой авторизации
-@app.route('/')
-def index():
-    return render_template('index.html')
+        h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+        }
 
-# Обработка входа по логину и паролю
-@app.route('/login', methods=['POST'])
-def login():
-    login = request.form['login']
-    password = request.form['password']
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
 
-    # Хэширование пароля
-    hashed_password = hashlib.sha256(password.encode()).hexdigest()
+        a:hover {
+            text-decoration: underline;
+        }
 
-    # Проверка, есть ли пользователь в базе данных
-    conn = sqlite3.connect('users.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM users WHERE login = ? AND password = ?', (login, hashed_password))
-    user = cursor.fetchone()
-    conn.close()
-
-    if user:
-        # Если пользователь найден, перенаправляем на страницу с количеством монет
-        return redirect(url_for('user_profile', user_id=user[0]))
-    else:
-        # Если пользователь не найден, возвращаем ошибку
-        return "Неверный логин или пароль"
-
-# Страница профиля с количеством монет
-@app.route('/profile/<int:user_id>')
-def user_profile(user_id):
-    conn = sqlite3.connect('users.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM users WHERE id = ?', (user_id,))
-    user = cursor.fetchone()
-    conn.close()
-
-    if user:
-        # Убедимся, что coins не None
-        coins = user[4] if user[4] is not None else 0
-        return render_template('profile.html', login=user[1], coins=coins)
-    else:
-        return "Пользователь не найден"
-
-# Страница регистрации
-@app.route('/register_page')
-def register_page():
-    return render_template('register.html')
-
-# Обработка регистрации
-@app.route('/register', methods=['POST'])
-def register():
-    login = request.form['login']
-    password = request.form['password']
-
-    # Хэширование пароля
-    hashed_password = hashlib.sha256(password.encode()).hexdigest()
-
-    # Добавление пользователя в базу данных
-    conn = sqlite3.connect('users.db')
-    cursor = conn.cursor()
-    try:
-        cursor.execute('INSERT INTO users (login, password, quantity_of_coins) VALUES (?, ?, ?)',
-                       (login, hashed_password, 0))
-        conn.commit()
-        conn.close()
-        return render_template('registration_success.html')
-    except sqlite3.IntegrityError:
-        conn.close()
-        return "Пользователь с таким логином уже существует."
-
-if __name__ == '__main__':
-    init_db()
-    app.run(debug=True)
+        p {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Добро пожаловать, {{ login }}!</h1>
+        <p>Количество ваших монет: {{ coins }}</p>
+        <a href="/">Выйти</a>
+    </div>
+</body>
+</html>
