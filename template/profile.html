@@ -1,0 +1,88 @@
+<!-- profile.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добро пожаловать</title>
+    <style>
+        /* Общие стили */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: "LNMO Bot";
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: rgba(0, 57, 110, 1);
+            z-index: -1;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+            z-index: 1;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        p {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Добро пожаловать, {{ login }}!</h1>
+        <p>Количество ваших монет: {{ coins }}</p>
+        {% if is_admin %}
+        <h2>Административная панель</h2>
+        <form action="/update_coins" method="POST">
+            <input type="hidden" name="admin_id" value="{{ user_id }}">
+            <input type="text" name="user_id" placeholder="ID пользователя" required>
+            <input type="number" name="new_coins" placeholder="Новое количество монет" required>
+            <button type="submit">Обновить монеты</button>
+        </form>
+        {% endif %}
+        {% if is_superadmin %}
+        <h2>Назначение администратора</h2>
+        <form action="/make_admin" method="POST">
+            <input type="hidden" name="superadmin_id" value="{{ user_id }}">
+            <input type="text" name="user_id" placeholder="ID пользователя" required>
+            <button type="submit">Назначить администратором</button>
+        </form>
+        {% endif %}
+        <a href="/">Выйти</a>
+    </div>
+</body>
+</html>
