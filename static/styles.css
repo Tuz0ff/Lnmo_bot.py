@@ -1,0 +1,316 @@
+/* styles.css */
+
+/* Общие стили для всех страниц */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #1a1a2e;
+    color: #e0e0e0;
+    margin: 0;
+    padding: 20px; /* Добавлено */
+    min-height: 100vh; /* Замените height на min-height */
+    position: relative;
+    overflow-y: auto;
+    display: block; /* Убрано flex-центрирование */
+}
+
+/*body::before {
+    content: "LNMO Bot";
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 48px;
+    font-weight: bold;
+    color: rgba(0, 57, 110, 1);
+    z-index: -1;
+}*/
+
+.container {
+    background-color: #16213e;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    max-width: 800px; /* Добавлено для адаптивности */
+    width: 90%; /* Замените фиксированную ширину */
+    margin: 60px auto 40px; /* Центрирование и отступы */
+    box-sizing: border-box;
+}
+
+h1 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #e0e0e0; /* Светлый текст */
+}
+
+input, select {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #0f3460; /* Тёмно-синяя граница */
+    border-radius: 4px;
+    box-sizing: border-box;
+    background-color: #0f3460; /* Тёмно-синий фон */
+    color: #e0e0e0; /* Светлый текст */
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff; /* Синяя кнопка */
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #0056b3; /* Тёмно-синий при наведении */
+}
+
+a {
+    color: #007bff; /* Синяя ссылка */
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+p {
+    margin: 10px 0;
+    color: #e0e0e0; /* Светлый текст */
+}
+
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 5px;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.toast.show {
+    opacity: 1;
+}
+
+.role-selection {
+    margin: 10px 0;
+    display: flex;
+    justify-content: center; /* Выравнивание по центру */
+    gap: 20px; /* Отступ между элементами */
+}
+
+.role-selection label {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Радиокнопки слева */
+}
+
+.role-selection input[type="radio"] {
+    margin-right: 5px; /* Отступ между радиокнопкой и текстом */
+}
+
+/* Стиль для контейнера кнопки "Выйти" */
+.logout-container {
+    display: flex;
+    justify-content: center; /* Горизонтальное выравнивание по центру */
+    margin-top: 20px; /* Отступ сверху */
+    margin-bottom: 20px; /* Отступ снизу */
+}
+
+/* Стиль для кнопки "Выйти" */
+.logout-button {
+    padding: 10px 20px; /* Внутренние отступы */
+    background-color: #f44336; /* Цвет фона */
+    color: white; /* Цвет текста */
+    border: none; /* Убираем границу */
+    border-radius: 5px; /* Закругляем углы */
+    cursor: pointer; /* Курсор в виде указателя */
+    text-align: center; /* Выравнивание текста по центру */
+    transition: background-color 0.3s ease; /* Плавное изменение цвета */
+}
+
+.logout-button:hover {
+    background-color: #d32f2f; /* Цвет фона при наведении */
+}
+
+/* Стиль для контейнера с таблицей */
+.table-container {
+    max-height: 400px; /* Максимальная высота контейнера */
+    overflow-y: auto; /* Прокрутка, если таблица не помещается */
+    margin-bottom: 20px; /* Отступ снизу */
+}
+
+html, body {
+html, body {
+    height: 100%;
+    margin: 0;
+    overflow: auto; /* Разрешить прокрутку для всей страницы */
+}
+
+.user-list {
+    max-height: 70vh;
+    overflow-y: auto;
+    margin: 20px 0;
+    border: 1px solid #0f3460;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+/* Убедитесь, что нет фиксированных высот у родительских блоков */
+.class-table, .direction-table {
+    width: 100%;
+    margin: 20px 0;
+    border-collapse: collapse;
+}
+
+.class-table td, .direction-table td {
+    padding: 12px;
+    border: 1px solid #0f3460;
+}
+
+#update-coins-form,
+#subtract-coins-form {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #0f3460;
+    border-radius: 4px;
+}
+
+.form-group {
+    margin: 15px 0;
+}
+
+.admin-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-top: 2rem;
+    padding: 20px;
+    background: #16213e;
+    border-radius: 12px;
+    border: 1px solid #2a3a5a;
+}
+
+.table-container {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.control-column {
+    background: #0f3460;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.coin-control-section {
+    background: #1a2a4e;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.control-header {
+    color: #007bff;
+    border-bottom: 2px solid #2a3a5a;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.user-checkbox {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin: 8px 0;
+    background: #16213e;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.user-checkbox:hover {
+    transform: translateX(5px);
+    background: #1a2a4e;
+}
+
+.coin-input {
+    background: #0f3460;
+    border: 2px solid #007bff;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    width: 100%;
+    margin: 10px 0;
+}
+
+.coin-input:focus {
+    outline: none;
+    box-shadow: 0 0 8px rgba(0,123,255,0.3);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.dual-column {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* Дополнительные стили для кнопок */
+.modern-btn {
+    padding: 12px 25px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+.add-btn {
+    background: #00b894;
+}
+
+.remove-btn {
+    background: #d63031;
+}
+
+.modern-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+}
+
+/* Вертикальное расположение */
+.coin-controls-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    margin-top: 20px;
+}
+
+/* Центрирование кнопок выбора класса */
+.table-btn {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+    padding: 10px 15px;
+}
+
+/* Гарантия что кнопки не вылезают */
+.coin-control-section {
+    max-width: 100%;
+    overflow: hidden;
+}
