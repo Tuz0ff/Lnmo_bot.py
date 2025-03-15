@@ -171,9 +171,9 @@ html, body {
     border-collapse: collapse;
 }
 
-.class-table td, .direction-table td {
-    padding: 12px;
-    border: 1px solid #0f3460;
+.class-table td {
+    text-align: center;
+    padding: 15px;
 }
 
 #update-coins-form,
@@ -313,4 +313,9 @@ html, body {
 .coin-control-section {
     max-width: 100%;
     overflow: hidden;
+}
+
+.class-table button {
+    margin: 0 auto;
+    display: block;
 }
