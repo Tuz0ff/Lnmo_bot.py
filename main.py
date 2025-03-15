@@ -223,7 +223,7 @@ def make_admin():
     cursor.execute('SELECT login FROM users WHERE id = ?', (superadmin_id,))
     superadmin = cursor.fetchone()
 
-    if superadmin and superadmin[0] == "superadmin":  # Проверка, что это superadmin
+    if superadmin and superadmin[0] == 1:  # Проверка, что это superadmin
         # Находим пользователя по логину
         cursor.execute('SELECT id FROM users WHERE login = ?', (user_login,))
         user = cursor.fetchone()
