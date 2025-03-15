@@ -1,213 +1,62 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Профиль</title>
+    <title>Регистрация</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <div class="container">
-        <div class="profile-header">
-            <h1>Добро пожаловать, {{ login }}!</h1>
-            <div class="coins-badge">
-                💰 {{ coins }} монет
+        <h1>Регистрация</h1>
+        <form action="/register" method="POST">
+            <input type="text" id="login" name="login" placeholder="Логин" required><br><br>
+            <input type="password" id="password" name="password" placeholder="Пароль" required><br><br>
+            <div class="role-selection">
+                <label>
+                    <input type="radio" name="role" value="student" checked onclick="toggleClassAndDirection(true)">
+                    Я ученик
+                </label>
+                <label>
+                    <input type="radio" name="role" value="teacher" onclick="toggleClassAndDirection(false)">
+                    Я преподаватель
+                </label>
             </div>
-        </div>
-
-        {% if not is_admin %}
-        <div class="user-info">
-            <p>Класс: <span class="highlight">{{ user[5] if user[5] else 'Не указан' }}</span></p>
-            <p>Направление: <span class="highlight">
-                {% if user[6] %}
-                    {% set direction = user[6] %}
-                    {% if direction == 'math' %}Математика
-                    {% elif direction == 'bio' %}Биология
-                    {% elif direction == 'eng' %}Инженерия
-                    {% elif direction == 'hum' %}Гуманитарное
-                    {% elif direction == 'it' %}IT
-                    {% else %}{{ direction }}{% endif %}
-                {% else %}Не указано{% endif %}
-            </span></p>
-        </div>
-        {% endif %}
-
-        {% if message %}
-        <div class="toast" id="toast">{{ message }}</div>
-        {% endif %}
-
-        {% if is_admin %}
-        <div class="admin-panel">
-            <div class="control-column">
-                <h2 class="control-header">Управление классами</h2>
-                <table class="class-table">
-                    <thead>
-                        <tr>
-                            <th>Класс</th>
-                            <th>Действие</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for class in [7,8,9,10,11] %}
-                        <tr>
-                            <td>{{ class }} класс</td>
-                            <td>
-                                <button class="modern-btn table-btn" onclick="loadDirections('{{ class }}')">
-                                    Выбрать
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-
-                <div id="direction-list" style="display: none;">
-                    <h3 class="control-header">Направления <span id="selected-class"></span> класса</h3>
-                    <table class="direction-table">
-                        <tbody>
-                            <tr>
-                                <td>IT</td>
-                                <td><button class="modern-btn table-btn" onclick="loadUsers('it')">Показать</button></td>
-                            </tr>
-                            <tr>
-                                <td>Био</td>
-                                <td><button class="modern-btn table-btn" onclick="loadUsers('bio')">Показать</button></td>
-                            </tr>
-                            <tr>
-                                <td>Мат</td>
-                                <td><button class="modern-btn table-btn" onclick="loadUsers('math')">Показать</button></td>
-                            </tr>
-                            <tr>
-                                <td>Инж</td>
-                                <td><button class="modern-btn table-btn" onclick="loadUsers('eng')">Показать</button></td>
-                            </tr>
-                            <tr>
-                                <td>Гум</td>
-                                <td><button class="modern-btn table-btn" onclick="loadUsers('hum')">Показать</button></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+            <div id="class-direction-selection">
+                <select id="class" name="class" required>
+                    <option value="" disabled selected>Выберите класс</option>
+                    <option value="7">7 класс</option>
+                    <option value="8">8 класс</option>
+                    <option value="9">9 класс</option>
+                    <option value="10">10 класс</option>
+                    <option value="11">11 класс</option>
+                </select><br><br>
+                <select id="direction" name="direction" required>
+                    <option value="" disabled selected>Выберите направление</option>
+                    <option value="it">IT</option>
+                    <option value="bio">Био</option>
+                    <option value="math">Мат</option>
+                    <option value="eng">Инж</option>
+                    <option value="hum">Гум</option>
+                </select><br><br>
             </div>
-
-            <div class="control-column">
-                <div id="user-list" style="display: none;">
-                    <h3 class="control-header">👥 Ученики
-                        <span id="class-name"></span>
-                        <span id="direction-name"></span>
-                    </h3>
-
-                    <div class="coin-controls-vertical">
-                        <div class="coin-control-section">
-                            <h4>Прибавление монет</h4>
-                            <form id="update-coins-form" action="/update_coins" method="POST">
-                                <input type="hidden" name="admin_id" value="{{ user_id }}">
-                                <div id="users-container" class="users-list"></div>
-                                <input type="number"
-                                    id="add_coins"
-                                    name="add_coins"
-                                    class="coin-input"
-                                    placeholder="Введите сумму"
-                                    min="1"
-                                    required>
-                                <button type="submit" class="modern-btn add-btn">
-                                    ➕ Прибавить
-                                </button>
-                            </form>
-                        </div>
-
-                        <div class="coin-control-section">
-                            <h4>Убавление монет</h4>
-                            <form id="subtract-coins-form" action="/subtract_coins" method="POST">
-                                <input type="hidden" name="admin_id" value="{{ user_id }}">
-                                <div id="users-container-subtract" class="users-list"></div>
-                                <input type="number"
-                                    id="subtract_coins"
-                                    name="subtract_coins"
-                                    class="coin-input"
-                                    placeholder="Введите сумму"
-                                    min="1"
-                                    required>
-                                <button type="submit" class="modern-btn remove-btn">
-                                    ➖ Убавить
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
-        {% if is_superadmin %}
-        <div class="admin-section">
-            <h2 class="control-header">👑 Назначение администратора</h2>
-            <form action="/make_admin" method="POST">
-                <div class="form-group">
-                    <input type="hidden" name="superadmin_id" value="{{ user_id }}">
-                    <input type="text"
-                        id="user_login_admin"
-                        name="user_login"
-                        class="coin-input"
-                        placeholder="Введите логин пользователя"
-                        required>
-                </div>
-                <button type="submit" class="modern-btn add-btn">
-                    Назначить
-                </button>
-            </form>
-        </div>
-        {% endif %}
-
-        <div class="logout-container">
-            <a href="/" class="logout-button">Выйти</a>
-        </div>
+            <button type="submit">Зарегистрироваться</button>
+        </form>
+        <p>Уже есть аккаунт? <a href="/">Войдите здесь</a></p>
     </div>
-
     <script>
-        function showToast() {
-            const toast = document.getElementById('toast');
-            if (toast) {
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 3000);
+        function toggleClassAndDirection(show) {
+            const classDirectionSelection = document.getElementById('class-direction-selection');
+            if (show) {
+                classDirectionSelection.style.display = 'block';
+                document.getElementById('class').setAttribute('required', true);
+                document.getElementById('direction').setAttribute('required', true);
+            } else {
+                classDirectionSelection.style.display = 'none';
+                document.getElementById('class').removeAttribute('required');
+                document.getElementById('direction').removeAttribute('required');
             }
         }
-
-        let selectedClass = '';
-
-        function loadDirections(className) {
-            selectedClass = className;
-            const directionList = document.getElementById('direction-list');
-            directionList.style.display = 'block';
-            document.getElementById('selected-class').textContent = className;
-            document.getElementById('user-list').style.display = 'none';
-        }
-
-        function loadUsers(direction) {
-            fetch(`/get_users_by_class_and_direction?class=${selectedClass}&direction=${direction}`)
-                .then(response => response.json())
-                .then(data => {
-                    const containers = [
-                        document.getElementById('users-container'),
-                        document.getElementById('users-container-subtract')
-                    ];
-
-                    containers.forEach(container => {
-                        container.innerHTML = data.users.map(user => `
-                            <label class="user-checkbox">
-                                <input type="checkbox" name="user_ids" value="${user.id}">
-                                ${user.login} (${user.quantity_of_coins} 💰)
-                            </label>
-                        `).join('');
-                    });
-
-                    document.getElementById('user-list').style.display = 'block';
-                    document.getElementById('class-name').textContent = selectedClass;
-                    document.getElementById('direction-name').textContent = direction;
-                });
-        }
-
-        window.onload = showToast;
     </script>
 </body>
 </html>
