@@ -1,88 +1,213 @@
-<!-- profile.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Добро пожаловать</title>
-    <style>
-        /* Общие стили */
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            position: relative;
-        }
-
-        body::before {
-            content: "LNMO Bot";
-            position: absolute;
-            top: 30%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 48px;
-            font-weight: bold;
-            color: rgba(0, 57, 110, 1);
-            z-index: -1;
-        }
-
-        .container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
-            text-align: center;
-            z-index: 1;
-        }
-
-        h1 {
-            margin-bottom: 20px;
-            font-size: 24px;
-            color: #333;
-        }
-
-        a {
-            color: #007bff;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-
-        p {
-            margin: 10px 0;
-        }
-    </style>
+    <title>Профиль</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1>Добро пожаловать, {{ login }}!</h1>
-        <p>Количество ваших монет: {{ coins }}</p>
+        <div class="profile-header">
+            <h1>Добро пожаловать, {{ login }}!</h1>
+            <div class="coins-badge">
+                💰 {{ coins }} монет
+            </div>
+        </div>
+
+        {% if not is_admin %}
+        <div class="user-info">
+            <p>Класс: <span class="highlight">{{ user[5] if user[5] else 'Не указан' }}</span></p>
+            <p>Направление: <span class="highlight">
+                {% if user[6] %}
+                    {% set direction = user[6] %}
+                    {% if direction == 'math' %}Математика
+                    {% elif direction == 'bio' %}Биология
+                    {% elif direction == 'eng' %}Инженерия
+                    {% elif direction == 'hum' %}Гуманитарное
+                    {% elif direction == 'it' %}IT
+                    {% else %}{{ direction }}{% endif %}
+                {% else %}Не указано{% endif %}
+            </span></p>
+        </div>
+        {% endif %}
+
+        {% if message %}
+        <div class="toast" id="toast">{{ message }}</div>
+        {% endif %}
+
         {% if is_admin %}
-        <h2>Административная панель</h2>
-        <form action="/update_coins" method="POST">
-            <input type="hidden" name="admin_id" value="{{ user_id }}">
-            <input type="text" name="user_id" placeholder="ID пользователя" required>
-            <input type="number" name="new_coins" placeholder="Новое количество монет" required>
-            <button type="submit">Обновить монеты</button>
-        </form>
+        <div class="admin-panel">
+            <div class="control-column">
+                <h2 class="control-header">Управление классами</h2>
+                <table class="class-table">
+                    <thead>
+                        <tr>
+                            <th>Класс</th>
+                            <th>Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for class in [7,8,9,10,11] %}
+                        <tr>
+                            <td>{{ class }} класс</td>
+                            <td>
+                                <button class="modern-btn table-btn" onclick="loadDirections('{{ class }}')">
+                                    Выбрать
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <div id="direction-list" style="display: none;">
+                    <h3 class="control-header">Направления <span id="selected-class"></span> класса</h3>
+                    <table class="direction-table">
+                        <tbody>
+                            <tr>
+                                <td>IT</td>
+                                <td><button class="modern-btn table-btn" onclick="loadUsers('it')">Показать</button></td>
+                            </tr>
+                            <tr>
+                                <td>Био</td>
+                                <td><button class="modern-btn table-btn" onclick="loadUsers('bio')">Показать</button></td>
+                            </tr>
+                            <tr>
+                                <td>Мат</td>
+                                <td><button class="modern-btn table-btn" onclick="loadUsers('math')">Показать</button></td>
+                            </tr>
+                            <tr>
+                                <td>Инж</td>
+                                <td><button class="modern-btn table-btn" onclick="loadUsers('eng')">Показать</button></td>
+                            </tr>
+                            <tr>
+                                <td>Гум</td>
+                                <td><button class="modern-btn table-btn" onclick="loadUsers('hum')">Показать</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="control-column">
+                <div id="user-list" style="display: none;">
+                    <h3 class="control-header">👥 Ученики
+                        <span id="class-name"></span>
+                        <span id="direction-name"></span>
+                    </h3>
+
+                    <div class="coin-controls-vertical">
+                        <div class="coin-control-section">
+                            <h4>Прибавление монет</h4>
+                            <form id="update-coins-form" action="/update_coins" method="POST">
+                                <input type="hidden" name="admin_id" value="{{ user_id }}">
+                                <div id="users-container" class="users-list"></div>
+                                <input type="number"
+                                    id="add_coins"
+                                    name="add_coins"
+                                    class="coin-input"
+                                    placeholder="Введите сумму"
+                                    min="1"
+                                    required>
+                                <button type="submit" class="modern-btn add-btn">
+                                    ➕ Прибавить
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="coin-control-section">
+                            <h4>Убавление монет</h4>
+                            <form id="subtract-coins-form" action="/subtract_coins" method="POST">
+                                <input type="hidden" name="admin_id" value="{{ user_id }}">
+                                <div id="users-container-subtract" class="users-list"></div>
+                                <input type="number"
+                                    id="subtract_coins"
+                                    name="subtract_coins"
+                                    class="coin-input"
+                                    placeholder="Введите сумму"
+                                    min="1"
+                                    required>
+                                <button type="submit" class="modern-btn remove-btn">
+                                    ➖ Убавить
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         {% endif %}
+
         {% if is_superadmin %}
-        <h2>Назначение администратора</h2>
-        <form action="/make_admin" method="POST">
-            <input type="hidden" name="superadmin_id" value="{{ user_id }}">
-            <input type="text" name="user_id" placeholder="ID пользователя" required>
-            <button type="submit">Назначить администратором</button>
-        </form>
+        <div class="admin-section">
+            <h2 class="control-header">👑 Назначение администратора</h2>
+            <form action="/make_admin" method="POST">
+                <div class="form-group">
+                    <input type="hidden" name="superadmin_id" value="{{ user_id }}">
+                    <input type="text"
+                        id="user_login_admin"
+                        name="user_login"
+                        class="coin-input"
+                        placeholder="Введите логин пользователя"
+                        required>
+                </div>
+                <button type="submit" class="modern-btn add-btn">
+                    Назначить
+                </button>
+            </form>
+        </div>
         {% endif %}
-        <a href="/">Выйти</a>
+
+        <div class="logout-container">
+            <a href="/" class="logout-button">Выйти</a>
+        </div>
     </div>
+
+    <script>
+        function showToast() {
+            const toast = document.getElementById('toast');
+            if (toast) {
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 3000);
+            }
+        }
+
+        let selectedClass = '';
+
+        function loadDirections(className) {
+            selectedClass = className;
+            const directionList = document.getElementById('direction-list');
+            directionList.style.display = 'block';
+            document.getElementById('selected-class').textContent = className;
+            document.getElementById('user-list').style.display = 'none';
+        }
+
+        function loadUsers(direction) {
+            fetch(`/get_users_by_class_and_direction?class=${selectedClass}&direction=${direction}`)
+                .then(response => response.json())
+                .then(data => {
+                    const containers = [
+                        document.getElementById('users-container'),
+                        document.getElementById('users-container-subtract')
+                    ];
+
+                    containers.forEach(container => {
+                        container.innerHTML = data.users.map(user => `
+                            <label class="user-checkbox">
+                                <input type="checkbox" name="user_ids" value="${user.id}">
+                                ${user.login} (${user.quantity_of_coins} 💰)
+                            </label>
+                        `).join('');
+                    });
+
+                    document.getElementById('user-list').style.display = 'block';
+                    document.getElementById('class-name').textContent = selectedClass;
+                    document.getElementById('direction-name').textContent = direction;
+                });
+        }
+
+        window.onload = showToast;
+    </script>
 </body>
 </html>
