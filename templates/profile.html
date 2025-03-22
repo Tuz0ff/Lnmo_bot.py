@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Профиль</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
@@ -29,6 +30,11 @@
                     {% else %}{{ direction }}{% endif %}
                 {% else %}Не указано{% endif %}
             </span></p>
+        </div>
+
+        <div class="chart-container">
+            <h2>График изменения монет за последний месяц</h2>
+            <canvas id="coinsChart"></canvas>
         </div>
         {% endif %}
 
@@ -62,7 +68,7 @@
                 </table>
 
                 <div id="direction-list" style="display: none;">
-                    <h3 class="control-header">Направления для <span id="selected-class"></span></h3>
+                    <h3 class="control-header">Направления для <span id="selected-class"></span> параллели</h3>
                     <table class="direction-table">
                         <tbody>
                             <tr>
@@ -206,6 +212,30 @@
                     document.getElementById('direction-name').textContent = direction;
                 });
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('coinsChart').getContext('2d');
+            const coinsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: {{ labels | tojson }},  // Передаем метки времени (дни месяца)
+                    datasets: [{
+                        label: 'Количество монет',
+                        data: {{ coins_data | tojson }},  // Передаем данные о монетах
+                        borderColor: '#007bff',
+                        borderWidth: 2,
+                        fill: false
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
 
         window.onload = showToast;
     </script>
