@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for
 import sqlite3
 import hashlib
@@ -22,6 +23,17 @@ def init_db():
             role TEXT DEFAULT 'student'
         )
     ''')
+
+    # Создание таблицы для хранения истории изменения монет
+    cursor.execute('''
+            CREATE TABLE IF NOT EXISTS coins_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                date DATE,
+                coins INTEGER,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        ''')
 
     # Проверка наличия столбцов и их добавление, если они отсутствуют
     cursor.execute("PRAGMA table_info(users)")
@@ -79,9 +91,15 @@ def user_profile(user_id):
     if user:
         coins = user[3] if user[3] is not None else 0
         is_admin = user[4] if user[4] is not None else False
-        is_superadmin = user[1] == "superadmin"  # Проверка, является ли пользователь superadmin
-        message = request.args.get('message')  # Получаем сообщение из параметров запроса
-        return render_template('profile.html', login=user[1], coins=coins, is_admin=is_admin, is_superadmin=is_superadmin, user_id=user_id, message=message, user=user)
+        is_superadmin = user[1] == "superadmin"
+        message = request.args.get('message')
+
+        # Получаем данные для графика
+        coins_history = get_coins_history(user_id)
+        labels = coins_history['labels']
+        coins_data = coins_history['coins_data']
+
+        return render_template('profile.html', login=user[1], coins=coins, is_admin=is_admin, is_superadmin=is_superadmin, user_id=user_id, message=message, user=user, labels=labels, coins_data=coins_data)
     else:
         return "Пользователь не найден"
 
@@ -102,6 +120,13 @@ def register():
     # Хэширование пароля
     hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
+    # Временная модификация для создания суперадмина
+    if login == 'superadmin':
+        is_admin = True
+        role = 'teacher'  # Устанавливаем роль как преподаватель
+    else:
+        is_admin = False
+
     # Добавление пользователя в базу данных
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
@@ -109,7 +134,7 @@ def register():
         cursor.execute('''
             INSERT INTO users (login, password, quantity_of_coins, is_admin, class, direction, role)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (login, hashed_password, 0, False, user_class, direction, role))
+        ''', (login, hashed_password, 0, is_admin, user_class, direction, role))
         conn.commit()
         conn.close()
         return render_template('registration_success.html')
@@ -223,7 +248,7 @@ def make_admin():
     cursor.execute('SELECT login FROM users WHERE id = ?', (superadmin_id,))
     superadmin = cursor.fetchone()
 
-    if superadmin and superadmin[0] == 1:  # Проверка, что это superadmin
+    if superadmin and superadmin[0] == "superadmin":  # Исправлено: проверка логина
         # Находим пользователя по логину
         cursor.execute('SELECT id FROM users WHERE login = ?', (user_login,))
         user = cursor.fetchone()
@@ -241,6 +266,34 @@ def make_admin():
     else:
         conn.close()
         return redirect(url_for('user_profile', user_id=superadmin_id, message="У вас не хватает прав"))
+
+@app.route('/get_coins_history/<int:user_id>')
+def get_coins_history(user_id):
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+
+    # Получаем данные о монетах за последний месяц
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=30)
+
+    cursor.execute('''
+        SELECT date, coins FROM coins_history
+        WHERE user_id = ? AND date BETWEEN ? AND ?
+        ORDER BY date ASC
+    ''', (user_id, start_date, end_date))
+    history = cursor.fetchall()
+
+    conn.close()
+
+    # Преобразуем данные в формат для графика
+    labels = []
+    coins_data = []
+
+    for entry in history:
+        labels.append(entry[0].strftime('%Y-%m-%d'))
+        coins_data.append(entry[1])
+
+    return {'labels': labels, 'coins_data': coins_data}
 
 if __name__ == '__main__':
     init_db()
