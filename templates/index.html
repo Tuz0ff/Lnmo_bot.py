@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,38 +9,54 @@
 <body>
     <div class="container">
         <h1>Авторизация</h1>
-        <form onsubmit="event.preventDefault(); loginWithCredentials();">
-            <input type="text" id="login" name="login" placeholder="Логин" required><br><br>
-            <input type="password" id="password" name="password" placeholder="Пароль" required><br><br>
+        <form id="loginForm">
+            <input type="text" id="login" name="login" placeholder="Логин" required>
+            <input type="password" id="password" name="password" placeholder="Пароль" required>
             <button type="submit">Войти</button>
         </form>
         <p>Нет аккаунта? <a href="/register_page">Зарегистрируйтесь здесь</a></p>
+        <div id="errorMessage" class="error-message"></div>
     </div>
+
     <script>
-        function loginWithCredentials() {
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
             const login = document.getElementById('login').value;
             const password = document.getElementById('password').value;
+            const errorElement = document.getElementById('errorMessage');
 
-            fetch('/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `login=${login}&password=${password}`,
-            })
-            .then(response => {
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`,
+                    credentials: 'include'
+                });
+
                 if (response.redirected) {
                     window.location.href = response.url;
                 } else {
-                    return response.text();
+                    const data = await response.text();
+                    errorElement.textContent = data;
                 }
-            })
-            .then(data => {
-                if (data) {
-                    alert(data);
-                }
-            });
-        }
+            } catch (error) {
+                errorElement.textContent = 'Ошибка соединения с сервером';
+                console.error('Error:', error);
+            }
+        });
+
+        // Проверяем авторизацию при загрузке страницы
+        fetch('/check_auth', {
+            credentials: 'include'
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.href = '/profile';
+            }
+        });
     </script>
 </body>
 </html>
