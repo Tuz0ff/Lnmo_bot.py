@@ -3,14 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Профиль</title>
+    <title>Профиль - {{ login }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
         <div class="profile-header">
-            <h1>Добро пожаловать, {{ login }}!</h1>
+            <div>
+                <h1>Добро пожаловать, {{ login }}!</h1>
+                <div class="user-role-badge">
+                    {% if is_superadmin %}
+                    <span class="superadmin-badge">👑 Суперадмин</span>
+                    {% elif is_admin %}
+                    <span class="admin-badge">🛡️ Администратор</span>
+                    {% else %}
+                    <span class="student-badge">🎓 Ученик</span>
+                    {% endif %}
+                </div>
+            </div>
             <div class="coins-badge">
                 💰 {{ coins }} монет
             </div>
@@ -18,124 +30,137 @@
 
         {% if not is_admin %}
         <div class="user-info">
-            <p>Класс: <span class="highlight">{{ user[5] if user[5] else 'Не указан' }}</span></p>
-            <p>Направление: <span class="highlight">
-                {% if user[6] %}
-                    {% set direction = user[6] %}
-                    {% if direction == 'math' %}Математика
-                    {% elif direction == 'bio' %}Биология
-                    {% elif direction == 'eng' %}Инженерия
-                    {% elif direction == 'hum' %}Гуманитарное
-                    {% elif direction == 'it' %}IT
-                    {% else %}{{ direction }}{% endif %}
-                {% else %}Не указано{% endif %}
-            </span></p>
+            <div class="info-card">
+                <h3>Информация о профиле</h3>
+                <p><strong>Класс:</strong> <span class="highlight">{{ user[5] if user[5] else 'Не указан' }}</span></p>
+                <p><strong>Направление:</strong> <span class="highlight">
+                    {% if user[6] %}
+                        {% if user[6] == 'math' %}Математика
+                        {% elif user[6] == 'bio' %}Биология
+                        {% elif user[6] == 'eng' %}Инженерия
+                        {% elif user[6] == 'hum' %}Гуманитарное
+                        {% elif user[6] == 'it' %}IT
+                        {% else %}{{ user[6] }}{% endif %}
+                    {% else %}Не указано{% endif %}
+                </span></p>
+                <p><strong>Роль:</strong> <span class="highlight">
+                    {% if user[7] == 'teacher' %}Преподаватель
+                    {% else %}Ученик{% endif %}
+                </span></p>
+            </div>
         </div>
 
         <div class="chart-container">
-            <h2>График изменения монет за последний месяц</h2>
-            <canvas id="coinsChart"></canvas>
+            <h2>📈 История изменения монет</h2>
+            <div id="coinsChart"></div>
         </div>
         {% endif %}
 
         {% if message %}
-        <div class="toast" id="toast">{{ message }}</div>
+        <div class="toast show" id="toast">{{ message }}</div>
         {% endif %}
 
         {% if is_admin %}
         <div class="admin-panel">
             <div class="control-column">
                 <h2 class="control-header">Управление классами</h2>
-                <table class="class-table">
-                    <thead>
-                        <tr>
-                            <th>Класс</th>
-                            <th>Действие</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for class in [7,8,9,10,11] %}
-                        <tr>
-                            <td>{{ class }} класс</td>
-                            <td>
-                                <button class="modern-btn table-btn" onclick="loadDirections('{{ class }}')">
-                                    Выбрать
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-
-                <div id="direction-list" style="display: none;">
-                    <h3 class="control-header">Направления для <span id="selected-class"></span> параллели</h3>
-                    <table class="direction-table">
+                <div class="table-container">
+                    <table class="class-table">
+                        <thead>
+                            <tr>
+                                <th>Класс</th>
+                                <th>Действие</th>
+                            </tr>
+                        </thead>
                         <tbody>
+                            {% for class in [7,8,9,10,11] %}
                             <tr>
-                                <td>IT</td>
-                                <td><button class="modern-btn table-btn" onclick="loadUsers('it')">Показать</button></td>
+                                <td>{{ class }} класс</td>
+                                <td>
+                                    <button class="modern-btn table-btn" onclick="loadDirections('{{ class }}')">
+                                        Выбрать
+                                    </button>
+                                </td>
                             </tr>
-                            <tr>
-                                <td>Био</td>
-                                <td><button class="modern-btn table-btn" onclick="loadUsers('bio')">Показать</button></td>
-                            </tr>
-                            <tr>
-                                <td>Мат</td>
-                                <td><button class="modern-btn table-btn" onclick="loadUsers('math')">Показать</button></td>
-                            </tr>
-                            <tr>
-                                <td>Инж</td>
-                                <td><button class="modern-btn table-btn" onclick="loadUsers('eng')">Показать</button></td>
-                            </tr>
-                            <tr>
-                                <td>Гум</td>
-                                <td><button class="modern-btn table-btn" onclick="loadUsers('hum')">Показать</button></td>
-                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
+                </div>
+
+                <div id="direction-list" style="display: none;">
+                    <h3 class="control-header">Направления для <span id="selected-class"></span> класса</h3>
+                    <div class="table-container">
+                        <table class="direction-table">
+                            <tbody>
+                                <tr>
+                                    <td>IT</td>
+                                    <td><button class="modern-btn table-btn" onclick="loadUsers('it')">Показать</button></td>
+                                </tr>
+                                <tr>
+                                    <td>Био</td>
+                                    <td><button class="modern-btn table-btn" onclick="loadUsers('bio')">Показать</button></td>
+                                </tr>
+                                <tr>
+                                    <td>Мат</td>
+                                    <td><button class="modern-btn table-btn" onclick="loadUsers('math')">Показать</button></td>
+                                <tr>
+                                    <td>Инж</td>
+                                    <td><button class="modern-btn table-btn" onclick="loadUsers('eng')">Показать</button></td>
+                                </tr>
+                                <tr>
+                                    <td>Гум</td>
+                                    <td><button class="modern-btn table-btn" onclick="loadUsers('hum')">Показать</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <div class="control-column">
                 <div id="user-list" style="display: none;">
-                    <h3 class="control-header">👥 Ученики
+                    <h3 class="control-header">
                         <span id="class-name"></span>
                         <span id="direction-name"></span>
                     </h3>
 
                     <div class="coin-controls-vertical">
                         <div class="coin-control-section">
-                            <h4>Прибавление монет</h4>
+                            <h4>➕ Прибавление монет</h4>
                             <form id="update-coins-form" action="/update_coins" method="POST">
                                 <input type="hidden" name="admin_id" value="{{ user_id }}">
                                 <div id="users-container" class="users-list"></div>
-                                <input type="number"
-                                    id="add_coins"
-                                    name="add_coins"
-                                    class="coin-input"
-                                    placeholder="Введите сумму"
-                                    min="1"
-                                    required>
+                                <div class="form-group">
+                                    <input type="number"
+                                        id="add_coins"
+                                        name="add_coins"
+                                        class="coin-input"
+                                        placeholder="Введите сумму"
+                                        min="1"
+                                        required>
+                                </div>
                                 <button type="submit" class="modern-btn add-btn">
-                                    ➕ Прибавить
+                                    Прибавить монеты
                                 </button>
                             </form>
                         </div>
 
                         <div class="coin-control-section">
-                            <h4>Убавление монет</h4>
+                            <h4>➖ Убавление монет</h4>
                             <form id="subtract-coins-form" action="/subtract_coins" method="POST">
                                 <input type="hidden" name="admin_id" value="{{ user_id }}">
                                 <div id="users-container-subtract" class="users-list"></div>
-                                <input type="number"
-                                    id="subtract_coins"
-                                    name="subtract_coins"
-                                    class="coin-input"
-                                    placeholder="Введите сумму"
-                                    min="1"
-                                    required>
+                                <div class="form-group">
+                                    <input type="number"
+                                        id="subtract_coins"
+                                        name="subtract_coins"
+                                        class="coin-input"
+                                        placeholder="Введите сумму"
+                                        min="1"
+                                        required>
+                                </div>
                                 <button type="submit" class="modern-btn remove-btn">
-                                    ➖ Убавить
+                                    Убавить монеты
                                 </button>
                             </form>
                         </div>
@@ -149,8 +174,8 @@
         <div class="admin-section">
             <h2 class="control-header">👑 Назначение администратора</h2>
             <form action="/make_admin" method="POST">
+                <input type="hidden" name="superadmin_id" value="{{ user_id }}">
                 <div class="form-group">
-                    <input type="hidden" name="superadmin_id" value="{{ user_id }}">
                     <input type="text"
                         id="user_login_admin"
                         name="user_login"
@@ -159,85 +184,161 @@
                         required>
                 </div>
                 <button type="submit" class="modern-btn add-btn">
-                    ⚡ Назначить
+                    Назначить администратором
                 </button>
             </form>
         </div>
         {% endif %}
 
         <div class="logout-container">
-            <a href="/" class="logout-button">Выйти</a>
+            <a href="/logout" class="logout-button">🚪 Выйти из системы</a>
         </div>
     </div>
 
     <script>
-        function showToast() {
-            const toast = document.getElementById('toast');
-            if (toast) {
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 3000);
+        // Проверка авторизации при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            // Проверка JWT токена
+            fetch('/check_auth', {
+                credentials: 'include'
+            }).then(response => {
+                if (!response.ok) {
+                    window.location.href = '/';
+                }
+            });
+
+            // Инициализация графика
+            initChart();
+
+            // Показать toast сообщение если есть
+            if (document.getElementById('toast')) {
+                setTimeout(() => {
+                    document.getElementById('toast').classList.remove('show');
+                }, 3000);
             }
+        });
+
+        // Инициализация графика Plotly
+        function initChart() {
+            const data = [{
+                x: {{ labels | tojson }},
+                y: {{ coins_data | tojson }},
+                type: 'scatter',
+                mode: 'lines+markers',
+                marker: {
+                    color: '#4cc9f0',
+                    size: 8
+                },
+                line: {
+                    color: '#4361ee',
+                    width: 3,
+                    shape: 'spline'
+                }
+            }];
+
+            const layout = {
+                title: 'Динамика изменения монет за последний месяц',
+                xaxis: {
+                    title: 'Дата',
+                    gridcolor: '#2a3a5a',
+                    tickfont: { color: '#e0e0e0' },
+                    titlefont: { color: '#e0e0e0' }
+                },
+                yaxis: {
+                    title: 'Количество монет',
+                    gridcolor: '#2a3a5a',
+                    tickfont: { color: '#e0e0e0' },
+                    titlefont: { color: '#e0e0e0' },
+                    rangemode: 'tozero'
+                },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#e0e0e0' },
+                margin: { t: 40, l: 60, r: 40, b: 60 },
+                hovermode: 'closest'
+            };
+
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                displaylogo: false,
+                modeBarButtonsToRemove: ['toImage', 'sendDataToCloud']
+            };
+
+            Plotly.newPlot('coinsChart', data, layout, config);
         }
 
+        // Функции для админ-панели
         let selectedClass = '';
 
         function loadDirections(className) {
             selectedClass = className;
-            const directionList = document.getElementById('direction-list');
-            directionList.style.display = 'block';
+            document.getElementById('direction-list').style.display = 'block';
             document.getElementById('selected-class').textContent = className;
             document.getElementById('user-list').style.display = 'none';
         }
 
         function loadUsers(direction) {
-            fetch(`/get_users_by_class_and_direction?class=${selectedClass}&direction=${direction}`)
-                .then(response => response.json())
-                .then(data => {
-                    const containers = [
-                        document.getElementById('users-container'),
-                        document.getElementById('users-container-subtract')
-                    ];
+            fetch(`/get_users_by_class_and_direction?class=${selectedClass}&direction=${direction}`, {
+                credentials: 'include'
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Ошибка загрузки данных');
+                return response.json();
+            })
+            .then(data => {
+                const containers = [
+                    document.getElementById('users-container'),
+                    document.getElementById('users-container-subtract')
+                ];
 
-                    containers.forEach(container => {
-                        container.innerHTML = data.users.map(user => `
-                            <label class="user-checkbox">
-                                <input type="checkbox" name="user_ids" value="${user.id}">
-                                ${user.login} (${user.quantity_of_coins} 💰)
-                            </label>
-                        `).join('');
-                    });
-
-                    document.getElementById('user-list').style.display = 'block';
-                    document.getElementById('class-name').textContent = selectedClass;
-                    document.getElementById('direction-name').textContent = direction;
+                containers.forEach(container => {
+                    container.innerHTML = data.users.map(user => `
+                        <label class="user-checkbox">
+                            <input type="checkbox" name="user_ids" value="${user.id}">
+                            ${user.login} (${user.quantity_of_coins} 💰)
+                        </label>
+                    `).join('');
                 });
+
+                document.getElementById('user-list').style.display = 'block';
+                document.getElementById('class-name').textContent = `${selectedClass} класс`;
+                document.getElementById('direction-name').textContent = ` / ${getDirectionName(direction)}`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Ошибка загрузки данных пользователей');
+            });
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const ctx = document.getElementById('coinsChart').getContext('2d');
-            const coinsChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: {{ labels | tojson }},  // Передаем метки времени (дни месяца)
-                    datasets: [{
-                        label: 'Количество монет',
-                        data: {{ coins_data | tojson }},  // Передаем данные о монетах
-                        borderColor: '#007bff',
-                        borderWidth: 2,
-                        fill: false
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
+        function getDirectionName(direction) {
+            const directions = {
+                'it': 'IT',
+                'bio': 'Био',
+                'math': 'Мат',
+                'eng': 'Инж',
+                'hum': 'Гум'
+            };
+            return directions[direction] || direction;
+        }
+
+        // Обработка форм
+        document.getElementById('update-coins-form')?.addEventListener('submit', function(e) {
+            if (!validateCoinForm(this)) e.preventDefault();
         });
 
-        window.onload = showToast;
+        document.getElementById('subtract-coins-form')?.addEventListener('submit', function(e) {
+            if (!validateCoinForm(this)) e.preventDefault();
+        });
+
+        function validateCoinForm(form) {
+            const checkboxes = form.querySelectorAll('input[type="checkbox"]:checked');
+            if (checkboxes.length === 0) {
+                alert('Выберите хотя бы одного пользователя');
+                return false;
+            }
+            return true;
+        }
     </script>
 </body>
 </html>
