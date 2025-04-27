@@ -1,15 +1,20 @@
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, redirect, url_for, make_response, jsonify
+from flask import Flask, render_template, request, redirect, url_for, make_response, jsonify, send_file
 import sqlite3
 import hashlib
 import jwt
 from functools import wraps
+import pandas as pd
+import matplotlib
+
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from io import BytesIO
 
 app = Flask(__name__, template_folder='templates')
-app.config['SECRET_KEY'] = 'ivanZoloTop148832252'  # В продакшене используйте сложный ключ
+app.config['SECRET_KEY'] = 'ivanZoloTop148832252'
 
 
-# Инициализация базы данных
 def init_db():
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
@@ -41,7 +46,6 @@ def init_db():
     conn.close()
 
 
-# Декоратор для проверки JWT
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -67,7 +71,6 @@ def token_required(f):
     return decorated
 
 
-# Проверка авторизации
 @app.route('/check_auth')
 def check_auth():
     token = request.cookies.get('token')
@@ -81,7 +84,6 @@ def check_auth():
         return jsonify({'authenticated': False}), 401
 
 
-# Главная страница
 @app.route('/')
 def index():
     token = request.cookies.get('token')
@@ -94,7 +96,6 @@ def index():
     return render_template('index.html')
 
 
-# Вход в систему
 @app.route('/login', methods=['POST'])
 def login():
     login = request.form['login']
@@ -120,7 +121,6 @@ def login():
         return "Неверный логин или пароль", 401
 
 
-# Выход из системы
 @app.route('/logout')
 def logout():
     response = make_response(redirect(url_for('index')))
@@ -128,7 +128,6 @@ def logout():
     return response
 
 
-# Профиль пользователя
 @app.route('/profile/<int:user_id>')
 @token_required
 def user_profile(current_user, user_id):
@@ -147,10 +146,6 @@ def user_profile(current_user, user_id):
         is_superadmin = user[1] == "superadmin"
         message = request.args.get('message')
 
-        coins_history = get_coins_history(user_id)
-        labels = [entry[0].strftime('%Y-%m-%d') for entry in coins_history]
-        coins_data = [entry[1] for entry in coins_history]
-
         return render_template('profile.html',
                                login=user[1],
                                coins=coins,
@@ -158,18 +153,51 @@ def user_profile(current_user, user_id):
                                is_superadmin=is_superadmin,
                                user_id=user_id,
                                message=message,
-                               user=user,
-                               labels=labels,
-                               coins_data=coins_data)
+                               user=user)
     else:
         return redirect(url_for('index'))
+
+
+@app.route('/coins_chart/<int:user_id>')
+@token_required
+def coins_chart(current_user, user_id):
+    if current_user[0] != user_id:
+        return redirect(url_for('index'))
+
+    conn = sqlite3.connect('users.db')
+    df = pd.read_sql('''
+        SELECT date, coins 
+        FROM coins_history 
+        WHERE user_id = ? 
+        ORDER BY date ASC
+    ''', conn, params=(user_id,))
+    conn.close()
+
+    plt.style.use('dark_background')
+    plt.figure(figsize=(2, 1))
+    plt.plot(df['date'], df['coins'], marker='o', linestyle='-', color='#4361ee', markersize=3)
+    plt.title('')
+    plt.xlabel('')
+    plt.ylabel('')
+    plt.grid(True, color='#2a3a5a', linestyle='--', linewidth=0.5)
+    plt.gca().set_facecolor('none')
+    plt.gcf().set_facecolor('none')
+    plt.xticks([])
+    plt.yticks([])
+    plt.tight_layout(pad=0)
+
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png', bbox_inches='tight', transparent=True)
+    buffer.seek(0)
+    plt.close()
+
+    return send_file(buffer, mimetype='image/png')
 
 
 @app.route('/make_admin', methods=['POST'])
 @token_required
 def make_admin(current_user):
     try:
-        # Проверка прав суперадмина
         if current_user[1] != "superadmin":
             return redirect(url_for('user_profile', user_id=current_user[0], message="У вас нет прав"))
 
@@ -177,7 +205,6 @@ def make_admin(current_user):
         if not user_login:
             return redirect(url_for('user_profile', user_id=current_user[0], message="Логин пользователя не указан"))
 
-        # Поиск пользователя
         conn = sqlite3.connect('users.db')
         cursor = conn.cursor()
         cursor.execute('SELECT id FROM users WHERE login = ?', (user_login,))
@@ -187,7 +214,6 @@ def make_admin(current_user):
             conn.close()
             return redirect(url_for('user_profile', user_id=current_user[0], message="Пользователь не найден"))
 
-        # Назначение администратором
         cursor.execute('UPDATE users SET is_admin = TRUE WHERE id = ?', (user[0],))
         conn.commit()
         conn.close()
@@ -202,24 +228,7 @@ def make_admin(current_user):
                                 user_id=current_user[0],
                                 message="Ошибка сервера"))
 
-# Получение истории монет
-def get_coins_history(user_id):
-    conn = sqlite3.connect('users.db')
-    cursor = conn.cursor()
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=30)
 
-    cursor.execute('''
-        SELECT date, coins FROM coins_history
-        WHERE user_id = ? AND date BETWEEN ? AND ?
-        ORDER BY date ASC
-    ''', (user_id, start_date, end_date))
-    history = cursor.fetchall()
-    conn.close()
-    return history
-
-
-# Регистрация
 @app.route('/register_page')
 def register_page():
     return render_template('register.html')
@@ -256,11 +265,10 @@ def register():
         return "Пользователь с таким логином уже существует.", 400
 
 
-# API для администратора
 @app.route('/get_users_by_class')
 @token_required
 def get_users_by_class(current_user):
-    if not current_user[4]:  # Проверка is_admin
+    if not current_user[4]:
         return jsonify({'error': 'Unauthorized'}), 403
 
     class_name = request.args.get('class')
@@ -306,11 +314,17 @@ def update_coins(current_user):
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
     for user_id in user_ids:
+        cursor.execute('''
+            INSERT INTO coins_history (user_id, date, coins)
+            VALUES (?, ?, ?)
+        ''', (user_id, datetime.now().date(), add_coins))
+
         cursor.execute('SELECT quantity_of_coins FROM users WHERE id = ?', (user_id,))
         user = cursor.fetchone()
         if user:
             new_coins = user[0] + add_coins
             cursor.execute('UPDATE users SET quantity_of_coins = ? WHERE id = ?', (new_coins, user_id))
+
     conn.commit()
     conn.close()
     return redirect(url_for('user_profile', user_id=current_user[0], message="Монеты успешно добавлены"))
