@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Профиль - {{ login }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
@@ -50,9 +48,9 @@
             </div>
         </div>
 
-        <div class="chart-container">
+        <div class="chart-container compact">
             <h2>📈 История изменения монет</h2>
-            <div id="coinsChart"></div>
+            <img src="/coins_chart/{{ user_id }}" alt="График монет" class="coin-chart-img">
         </div>
         {% endif %}
 
@@ -196,21 +194,12 @@
     </div>
 
     <script>
-        // Проверка авторизации при загрузке страницы
         document.addEventListener('DOMContentLoaded', function() {
-            // Проверка JWT токена
-            fetch('/check_auth', {
-                credentials: 'include'
-            }).then(response => {
-                if (!response.ok) {
-                    window.location.href = '/';
-                }
-            });
+            fetch('/check_auth', { credentials: 'include' })
+                .then(response => {
+                    if (!response.ok) window.location.href = '/';
+                });
 
-            // Инициализация графика
-            initChart();
-
-            // Показать toast сообщение если есть
             if (document.getElementById('toast')) {
                 setTimeout(() => {
                     document.getElementById('toast').classList.remove('show');
@@ -218,57 +207,6 @@
             }
         });
 
-        // Инициализация графика Plotly
-        function initChart() {
-            const data = [{
-                x: {{ labels | tojson }},
-                y: {{ coins_data | tojson }},
-                type: 'scatter',
-                mode: 'lines+markers',
-                marker: {
-                    color: '#4cc9f0',
-                    size: 8
-                },
-                line: {
-                    color: '#4361ee',
-                    width: 3,
-                    shape: 'spline'
-                }
-            }];
-
-            const layout = {
-                title: 'Динамика изменения монет за последний месяц',
-                xaxis: {
-                    title: 'Дата',
-                    gridcolor: '#2a3a5a',
-                    tickfont: { color: '#e0e0e0' },
-                    titlefont: { color: '#e0e0e0' }
-                },
-                yaxis: {
-                    title: 'Количество монет',
-                    gridcolor: '#2a3a5a',
-                    tickfont: { color: '#e0e0e0' },
-                    titlefont: { color: '#e0e0e0' },
-                    rangemode: 'tozero'
-                },
-                paper_bgcolor: 'rgba(0,0,0,0)',
-                plot_bgcolor: 'rgba(0,0,0,0)',
-                font: { color: '#e0e0e0' },
-                margin: { t: 40, l: 60, r: 40, b: 60 },
-                hovermode: 'closest'
-            };
-
-            const config = {
-                responsive: true,
-                displayModeBar: true,
-                displaylogo: false,
-                modeBarButtonsToRemove: ['toImage', 'sendDataToCloud']
-            };
-
-            Plotly.newPlot('coinsChart', data, layout, config);
-        }
-
-        // Функции для админ-панели
         let selectedClass = '';
 
         function loadDirections(className) {
@@ -322,7 +260,6 @@
             return directions[direction] || direction;
         }
 
-        // Обработка форм
         document.getElementById('update-coins-form')?.addEventListener('submit', function(e) {
             if (!validateCoinForm(this)) e.preventDefault();
         });
