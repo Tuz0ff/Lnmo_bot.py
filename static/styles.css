@@ -114,7 +114,7 @@ p {
 }
 
 .role-selection input[type="radio"] {
-    margin-right: 5px; /* Отступ между радиокнопкой и текстом */
+    margin-right: 5px; /* Отступ */
 }
 
 /* Стиль для контейнера кнопки "Выйти" */
@@ -134,14 +134,14 @@ p {
     border-radius: 5px; /* Закругляем углы */
     cursor: pointer; /* Курсор в виде указателя */
     text-align: center; /* Выравнивание текста по центру */
-    transition: background-color 0.3s ease; /* Плавное изменение цвета */
+    transition: background-color 0.4s ease; /* Плавное изменение цвета */
 }
 
 .logout-button:hover {
     background-color: #d32f2f; /* Цвет фона при наведении */
 }
 
-/* Стиль для контейнера с таблицей */
+/* Стил контейнера с таблицей */
 .table-container {
     max-height: 400px; /* Максимальная высота контейнера */
     overflow-y: auto; /* Прокрутка, если таблица не помещается */
@@ -152,7 +152,7 @@ html, body {
 html, body {
     height: 100%;
     margin: 0;
-    overflow: auto; /* Разрешить прокрутку для всей страницы */
+    overflow: auto;
 }
 
 .user-list {
@@ -164,7 +164,6 @@ html, body {
     padding: 10px;
 }
 
-/* Убедитесь, что нет фиксированных высот у родительских блоков */
 .class-table, .direction-table {
     width: 100%;
     margin: 20px 0;
@@ -266,7 +265,7 @@ html, body {
     gap: 20px;
 }
 
-/* Дополнительные стили для кнопок */
+/* стили кнопок */
 .modern-btn {
     padding: 12px 25px;
     border-radius: 8px;
@@ -309,7 +308,6 @@ html, body {
     padding: 10px 15px;
 }
 
-/* Гарантия что кнопки не вылезают */
 .coin-control-section {
     max-width: 100%;
     overflow: hidden;
@@ -318,4 +316,169 @@ html, body {
 .class-table button {
     margin: 0 auto;
     display: block;
+}
+
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.chart-container {
+    width: 200px;
+    height: 200px;
+    margin-top: 20px;
+    background-color: #0f3460;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    padding: 10px;
+}
+
+#coinsChart {
+    width: 100%;
+    height: 100%;
+}
+
+
+.chart-container {
+    width: 100%;
+    height: 400px;
+    margin-top: 20px;
+    background-color: #0f3460;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    padding: 20px;
+}
+
+.js-plotly-plot .plotly .modebar {
+    background: transparent !important;
+}
+
+.js-plotly-plot .plotly .modebar-btn path {
+    fill: #e0e0e0 !important;
+}
+
+.js-plotly-plot .plotly .xaxis-title,
+.js-plotly-plot .plotly .yaxis-title {
+    fill: #e0e0e0 !important;
+}
+
+.js-plotly-plot .plotly .gridlayer path {
+    stroke: #2a3a5a !important;
+}
+
+.js-plotly-plot .plotly .cartesianlayer .xaxis path,
+.js-plotly-plot .plotly .cartesianlayer .yaxis path {
+    stroke: #e0e0e0 !important;
+}
+
+.js-plotly-plot .plotly .cartesianlayer .xaxis .tick text,
+.js-plotly-plot .plotly .cartesianlayer .yaxis .tick text {
+    fill: #e0e0e0 !important;
+}
+
+.error-message {
+    color: #ff6b6b;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.coins-badge {
+    background-color: #0f3460;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.highlight {
+    color: #007bff;
+    font-weight: bold;
+}
+
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 5px;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.toast.show {
+    opacity: 1;
+}
+
+.coin-chart-img {
+    width: 100%;
+    height: 400px;
+    object-fit: contain;
+    background-color: #0f3460;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+/* styles.css */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #1a1a2e;
+    color: #e0e0e0;
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    position: relative;
+    overflow-y: auto;
+    display: block;
+}
+
+.container {
+    background-color: #16213e;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    max-width: 800px;
+    width: 90%;
+    margin: 60px auto 40px;
+    box-sizing: border-box;
+}
+
+h1 {
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.chart-container.compact {
+    width: 100%;
+    height: 300px;
+    margin-top: 15px;
+    padding: 15px;
+    background-color: #0f3460;
+    border-radius: 8px;
+}
+
+.coin-chart-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.chart-container.compact h2 {
+    font-size: 1.1em;
+    margin-bottom: 10px;
+    color: #e0e0e0;
 }
