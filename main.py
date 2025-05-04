@@ -174,25 +174,78 @@ def coins_chart(current_user, user_id):
     conn.close()
 
     plt.style.use('dark_background')
-    plt.figure(figsize=(2, 1))
-    plt.plot(df['date'], df['coins'], marker='o', linestyle='-', color='#4361ee', markersize=3)
-    plt.title('')
-    plt.xlabel('')
-    plt.ylabel('')
-    plt.grid(True, color='#2a3a5a', linestyle='--', linewidth=0.5)
-    plt.gca().set_facecolor('none')
-    plt.gcf().set_facecolor('none')
-    plt.xticks([])
-    plt.yticks([])
-    plt.tight_layout(pad=0)
+
+    plt.figure(figsize=(10, 6), facecolor='#1a1a2e')  # Увеличенный размер
+
+    ax = plt.subplot(111)
+
+    ax.spines['bottom'].set_linewidth(0.5)
+    ax.spines['left'].set_linewidth(0.5)
+    ax.spines['bottom'].set_color('#00ff88')
+    ax.spines['left'].set_color('#00ff88')
+
+    ax.set_facecolor('#1a1a2e')
+
+    plt.tight_layout(pad=3)
+    plt.subplots_adjust(left=0.15, right=0.85)
+
+    min_coins = df['coins'].min() or 0
+    max_coins = df['coins'].max() or 0
+    plt.ylim(min_coins - 2, max_coins + 2)
+
+    y_ticks = range(int(min_coins // 5 * 5), int((max_coins // 5 + 1) * 5), 5)
+    plt.yticks(y_ticks)
+
+    plt.plot(df['date'], df['coins'],
+             marker='o',
+             linestyle='-',
+             color='#4361ee',
+             markersize=4,
+             linewidth=1.5)
+
+    ax.spines['bottom'].set_color('#2a3a5a')
+    ax.spines['left'].set_color('#2a3a5a')
+    ax.tick_params(colors='#2a3a5a')
+
+    plt.grid(True, color='#cccccc', linestyle='--', linewidth=0.5)
+    plt.tight_layout(pad=0.5)
 
     buffer = BytesIO()
-    plt.savefig(buffer, format='png', bbox_inches='tight', transparent=True)
+    plt.savefig(buffer, format='png', dpi=100)
     buffer.seek(0)
     plt.close()
 
     return send_file(buffer, mimetype='image/png')
 
+
+@app.route('/get_coin_history/<int:user_id>')
+@token_required
+def get_coin_history(current_user, user_id):
+    if current_user[0] != user_id:
+        return jsonify({'error': 'Forbidden'}), 403
+
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        SELECT timestamp, coins 
+        FROM coins_history 
+        WHERE user_id = ? 
+        ORDER BY timestamp ASC
+    ''', (user_id,))
+
+    timestamps = []
+    balances = []
+    current_balance = 0
+
+    for row in cursor.fetchall():
+        current_balance += row[1]
+        timestamps.append(row[0])
+        balances.append(current_balance)
+
+    conn.close()
+
+    return jsonify({'timestamps': timestamps, 'balances': balances})
 
 @app.route('/make_admin', methods=['POST'])
 @token_required
@@ -315,9 +368,9 @@ def update_coins(current_user):
     cursor = conn.cursor()
     for user_id in user_ids:
         cursor.execute('''
-            INSERT INTO coins_history (user_id, date, coins)
+            INSERT INTO coins_history (user_id, timestamp, coins)
             VALUES (?, ?, ?)
-        ''', (user_id, datetime.now().date(), add_coins))
+        ''', (user_id, datetime.now(), add_coins))
 
         cursor.execute('SELECT quantity_of_coins FROM users WHERE id = ?', (user_id,))
         user = cursor.fetchone()
@@ -329,6 +382,66 @@ def update_coins(current_user):
     conn.close()
     return redirect(url_for('user_profile', user_id=current_user[0], message="Монеты успешно добавлены"))
 
+@app.route('/subtract_coins', methods=['POST'])
+@token_required
+def subtract_coins(current_user):
+    if not current_user[4]:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    user_ids = request.form.getlist('user_ids')
+    subtract_coins = int(request.form['subtract_coins'])
+
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    for user_id in user_ids:
+        cursor.execute('''
+            INSERT INTO coins_history (user_id, timestamp, coins)
+            VALUES (?, ?, ?)
+        ''', (user_id, datetime.now(), -subtract_coins))
+
+        cursor.execute('SELECT quantity_of_coins FROM users WHERE id = ?', (user_id,))
+        user = cursor.fetchone()
+        if user:
+            new_coins = max(0, user[0] - subtract_coins)  # Защита от отрицательных значений
+            cursor.execute('UPDATE users SET quantity_of_coins = ? WHERE id = ?', (new_coins, user_id))
+
+    conn.commit()
+    conn.close()
+    return redirect(url_for('user_profile', user_id=current_user[0], message="Монеты успешно списаны"))
+
+
+@app.route('/top')
+@token_required
+def top_users(current_user):
+    conn = sqlite3.connect('users.db')
+    conn.row_factory = sqlite3.Row  # Для доступа к полям по имени
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        SELECT login, quantity_of_coins, class, direction 
+        FROM users 
+        WHERE role = 'student' 
+        ORDER BY quantity_of_coins DESC 
+        LIMIT 20
+    ''')
+
+    top_users = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+
+    return render_template('top.html',
+                           top_users=top_users,
+                           user_id=current_user[0])
+
+
+@app.route('/coin_history/<int:user_id>')
+@token_required
+def coin_history(current_user, user_id):
+    if current_user[0] != user_id:
+        return redirect(url_for('index'))
+
+    return render_template('coin_history.html',
+                           user_id=user_id,
+                           login=current_user[1])
 
 if __name__ == '__main__':
     init_db()
