@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.9">
+    <title>История монет - {{ login }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body class="coin-history-page">
+    <div class="container">
+        <div class="profile-header">
+            <h1>📈 История изменения монет</h1>
+            <a href="/profile/{{ user_id }}" class="modern-btn back-btn">
+                ← Назад в профиль
+            </a>
+        </div>
+
+        <div id="chart-container" class="integrated-chart"></div>
+    </div>
+    <script>
+    fetch('/get_coin_history/{{ user_id }}')
+        .then(response => response.json())
+        .then(data => {
+            // Если данных нет
+            if (data.timestamps.length === 0) {
+                document.getElementById('chart-container').innerHTML =
+                    '<p class="no-data">Нет данных для отображения 📉</p>';
+                return;
+            }
+
+            //стиь
+            const layout = {
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                xaxis: {
+                    type: 'date',
+                    gridcolor: '#2a3a5a',
+                    linecolor: '#00ff88',
+                    tickformat: '%d.%m',
+                    title: {
+                        text: 'Дата',
+                        font: {color: '#e0e0e0', size: 14}
+                    }
+                },
+                yaxis: {
+                    gridcolor: '#2a3a5a',
+                    linecolor: '#00ff88',
+                    title: {
+                        text: '💰',
+                        font: {color: '#e0e0e0', size: 14}
+                    }
+                },
+                margin: {t: 20, r: 30, b: 60, l: 70},
+                font: {color: '#e0e0e0'},
+                hoverlabel: {font: {color: '#1a1a2e'}}
+            };
+
+            // Данные графика
+            const plotData = [{
+                x: data.timestamps,
+                y: data.balances,
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: {
+                    color: '#00ff88',
+                    width: 2,
+                    shape: 'linear'
+                },
+                marker: {
+                    size: 8,
+                    color: '#007bff',
+                    line: {width: 1, color: '#00ff88'}
+                }
+            }];
+
+            Plotly.newPlot('chart-container', plotData, layout);
+        });
+</script>
+</body>
+</html>
