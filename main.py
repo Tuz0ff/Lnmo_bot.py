@@ -175,7 +175,7 @@ def coins_chart(current_user, user_id):
 
     plt.style.use('dark_background')
 
-    plt.figure(figsize=(10, 6), facecolor='#1a1a2e')  # Увеличенный размер
+    plt.figure(figsize=(10, 6), facecolor='#1a1a2e')
 
     ax = plt.subplot(111)
 
