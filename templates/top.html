@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Топ учеников</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header-section">
+            <h1>🏆 Топ учеников</h1>
+            <a href="{{ url_for('user_profile', user_id=user_id) }}" class="modern-btn back-btn">← Назад в профиль</a>
+        </div>
+        <div class="leaderboard">
+            {% for user in top_users %}
+            <div class="leaderboard-item {% if loop.index <= 3 %}top-{{ loop.index }}{% endif %}">
+                <div class="rank">#{{ loop.index }}</div>
+                <div class="user-info">
+                    <span class="login">{{ user['login'] }}</span>
+                    <div class="details">
+                        <span class="class">Класс: {{ user['class'] }}</span>
+                        <span class="direction">
+                            {% if user['direction'] == 'math' %}Математика
+                            {% elif user['direction'] == 'bio' %}Биология
+                            {% elif user['direction'] == 'eng' %}Инженерия
+                            {% elif user['direction'] == 'hum' %}Гуманитарное
+                            {% elif user['direction'] == 'it' %}IT
+                            {% else %}{{ user['direction'] }}{% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="coins">💰 {{ user['quantity_of_coins'] }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
