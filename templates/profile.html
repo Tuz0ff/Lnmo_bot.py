@@ -21,15 +21,23 @@
                     {% endif %}
                 </div>
             </div>
+            <div class="coins-section">
             <div class="coins-badge">
                 💰 {{ coins }} монет
             </div>
+            <button onclick="window.location.href='/top'" class="modern-btn small-btn">
+                🏆 Топ учеников
+            </button>
+            <a href="/coin_history/{{ user_id }}" class="modern-btn small-btn" style="margin-top: 10px;">
+                📊 Полная история монет
+            </a>
+        </div>
         </div>
 
         {% if not is_admin %}
         <div class="user-info">
             <div class="info-card">
-                <h3>Информация о профиле</h3>
+                <h3>Информация о пользователе</h3>
                 <p><strong>Класс:</strong> <span class="highlight">{{ user[5] if user[5] else 'Не указан' }}</span></p>
                 <p><strong>Направление:</strong> <span class="highlight">
                     {% if user[6] %}
@@ -46,11 +54,6 @@
                     {% else %}Ученик{% endif %}
                 </span></p>
             </div>
-        </div>
-
-        <div class="chart-container compact">
-            <h2>📈 История изменения монет</h2>
-            <img src="/coins_chart/{{ user_id }}" alt="График монет" class="coin-chart-img">
         </div>
         {% endif %}
 
